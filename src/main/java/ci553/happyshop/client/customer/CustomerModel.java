@@ -70,7 +70,9 @@ public class CustomerModel {
             //TODO
             // 1. Merges items with the same product ID (combining their quantities).
             // 2. Sorts the products in the trolley by product ID.
-            trolley.add(theProduct);
+
+            // COMMENTED OUT - trolley.add(theProduct);
+            makeOrganisedTrolley();
             displayTaTrolley = ProductListFormatter.buildString(trolley); //build a String for trolley so that we can show it
         }
         else{
@@ -79,6 +81,17 @@ public class CustomerModel {
         }
         displayTaReceipt=""; // Clear receipt to switch back to trolleyPage (receipt shows only when not empty)
         updateView();
+    }
+
+    public void makeOrganisedTrolley(){
+        for (Product p: trolley){
+            if (p.getProductId().equals(theProduct.getProductId())) {
+                p.setOrderedQuantity(p.getOrderedQuantity() + theProduct.getOrderedQuantity());
+                return;
+            }
+        }
+        Product pNew = new Product(theProduct.getProductId(), theProduct.getProductDescription(), theProduct.getProductImageName(), theProduct.getUnitPrice(), theProduct.getStockQuantity() );
+        trolley.add(pNew);
     }
 
     void checkOut() throws IOException, SQLException {
@@ -182,5 +195,8 @@ public class CustomerModel {
     //for test only
     public ArrayList<Product> getTrolley() {
         return trolley;
+    }
+    public void setTheProduct(Product theProduct){
+        this.theProduct = theProduct;
     }
 }
