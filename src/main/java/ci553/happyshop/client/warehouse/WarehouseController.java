@@ -4,7 +4,16 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 public class WarehouseController {
-    public WarehouseModel model;
+    private WarehouseModel model;
+
+    public WarehouseController(WarehouseModel model) {
+        this.model = model;
+    }
+
+
+    public void WarehouseClient(WarehouseModel model) {
+        this.model = model;
+    }
 
     void process(String action) throws SQLException, IOException {
         switch (action) {

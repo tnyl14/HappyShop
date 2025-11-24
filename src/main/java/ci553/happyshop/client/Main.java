@@ -129,14 +129,17 @@ public class Main extends Application {
      * These components are linked after launching the Warehouse interface.
      */
     private void startWarehouseClient(){
-        WarehouseView view = new WarehouseView();
-        WarehouseController controller = new WarehouseController();
         WarehouseModel model = new WarehouseModel();
+        WarehouseController controller = new WarehouseController(model);
+
+        WarehouseView view = new WarehouseView();
+
+
         DatabaseRW databaseRW = DatabaseRWFactory.createDatabaseRW();
 
         // Link controller, model, and view and start view
         view.controller = controller;
-        controller.model = model;
+
         model.view = view;
         model.databaseRW = databaseRW;
         view.start(new Stage());
