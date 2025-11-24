@@ -257,8 +257,9 @@ public class CustomerModel {
             theProduct = null;
 
             System.out.println("Checkout failed: " + e.getMessage());
-            updateView();
+
 
         }
+        updateView();
     }
 }
