@@ -38,30 +38,107 @@ public class CustomerModel {
 
     //SELECT productID, description, image, unitPrice,inStock quantity
     void search() throws SQLException {
-        String productId = cusView.tfId.getText().trim();
-        if (!productId.isEmpty()) {
-            theProduct = databaseRW.searchByProductId(productId); //search database
-            if (theProduct != null && theProduct.getStockQuantity() > 0) {
-                double unitPrice = theProduct.getUnitPrice();
-                String description = theProduct.getProductDescription();
-                int stock = theProduct.getStockQuantity();
 
-                String baseInfo = String.format("Product_Id: %s\n%s,\nPrice: £%.2f", productId, description, unitPrice);
-                String quantityInfo = stock < 100 ? String.format("\n%d units left.", stock) : "";
-                displayLaSearchResult = baseInfo + quantityInfo;
-                System.out.println(displayLaSearchResult);
-            } else {
-                theProduct = null;
-                displayLaSearchResult = "No Product was found with ID " + productId;
-                System.out.println("No Product was found with ID " + productId);
-            }
-        } else {
-            theProduct = null;
-            displayLaSearchResult = "Please type ProductID";
-            System.out.println("Please type ProductID.");
+        String searchMode = cusView.getSearchMode();
+        System.out.println("DEBUG : searchMode = " + searchMode );
+
+
+        if (searchMode.equals("By Product ID")) {
+            System.out.println("DEBUG: Calling searchById()"); // to fix issues with search
+            searchById();
+        } else if (searchMode.equals("By Name/Description")) {
+            System.out.println("DEBUG: Calling searchByNameOrDescription()");
+           searchByNameOrDescription();
+        } else if (searchMode.equals("By Price Range")) {
+            System.out.println("DEBUG: Calling searchByPriceRange()");
+            searchByPriceRange();
         }
         updateView();
     }
+
+    private void searchById() throws SQLException {
+        String productId = cusView.tfId.getText().trim();
+
+        if (productId.isEmpty()){
+            theProduct = null;
+            displayLaSearchResult = "Please type ProductID";
+            return;
+        }
+        theProduct = databaseRW.searchByProductId(productId);
+
+        if (theProduct  != null && theProduct.getStockQuantity() > 0){
+            double unitPrice = theProduct.getUnitPrice();
+            String description = theProduct.getProductDescription();
+            int stock = theProduct.getStockQuantity();
+
+
+            String baseInfo = String.format("Product_Id: %s\n%s\nPrice: £%.2f", productId, description, unitPrice);
+            String quantifyInfo = stock <100 ? String.format("\n%d units left.", stock):"";
+            displayLaSearchResult = baseInfo + quantifyInfo;
+        }
+    }
+
+    private void searchByNameOrDescription() throws SQLException {
+        String keyword= cusView.tfId.getText().trim();
+
+        if (keyword.isEmpty()){
+            theProduct = null;
+            displayLaSearchResult = "Please enter product name";
+            return;
+        }
+        theProduct = databaseRW.searchByNameOrDescription(keyword);
+
+        if (theProduct != null){
+            displayLaSearchResult = String.format("product ID: %S\n%s\nPrice: %.2f",
+            theProduct.getProductId(),
+            theProduct.getProductDescription(),
+            theProduct.getUnitPrice());
+        } else {
+            displayLaSearchResult = "No matching product found:" + keyword;
+        }
+    }
+
+    private void searchByPriceRange() throws SQLException{
+        String minStr = cusView.getMinPrice();
+        String maxStr = cusView.getMaxPrice();
+
+        if (minStr.isEmpty() || maxStr.isEmpty()){
+            theProduct = null;
+            displayLaSearchResult = "please enter both min and max prices";
+            return;
+        }
+        try {
+            double minPrice = Double.parseDouble(minStr);
+            double maxPrice = Double.parseDouble(maxStr);
+
+            if (minPrice < 0 || maxPrice < 0){
+                displayLaSearchResult = "Price must be positive";
+                return;
+            }
+
+            if (minPrice > maxPrice){
+                displayLaSearchResult = "Min price can't be higher than max";
+                return;
+            }
+
+            ArrayList<Product> products = databaseRW.searchByPriceRange(minPrice, maxPrice);
+
+            if (!products.isEmpty()){
+                theProduct = products.get(0);
+                displayLaSearchResult = String.format("Found %d products\nShowing: %s\nprice: £%.2f",
+                products.size(),
+                theProduct.getProductDescription(),
+                theProduct.getUnitPrice());
+            } else {
+                theProduct = null;
+                displayLaSearchResult = String.format("No product found between $%.2f and $%.2f", minPrice, maxPrice);
+            }
+        } catch (NumberFormatException e) {
+            displayLaSearchResult = "Please enter valid numbers for pricing";
+        }
+    }
+
+
 
     void addToTrolley() {
         if (theProduct != null) {
@@ -74,7 +151,7 @@ public class CustomerModel {
 
             // COMMENTED OUT - trolley.add(theProduct);
             makeOrganisedTrolley();
-            displayTaTrolley = ProductListFormatter.buildString(trolley); //build a String for trolley so that we can show it
+            displayTaTrolley = ProductListFormatter.buildString(trolley); //built a String for trolley so it's shown
         } else {
             displayLaSearchResult = "Please search for an available product before adding it to the trolley";
             System.out.println("must search and get an available product before add to trolley");
@@ -165,22 +242,23 @@ public class CustomerModel {
         double totalPayment = 0;
         ArrayList<Product> items = getTrolley();
 
-        Map<Product, Integer> quantityMap = new HashMap<>();
-        for (Product product : items) {
-            totalPayment += product.getUnitPrice() * product.getOrderedQuantity();
-            }
+        for (Product p: items){
+            // totalPayment += theProduct.getUnitPrice() * theProduct.getOrderedQuantity();
+            //to calc payment using merged quantities
 
-        // Map to check and adjust quantities
-        for (Map.Entry<Product, Integer> entry : quantityMap.entrySet()) {
-            Product p = entry.getKey();
+            int qty = p.getOrderedQuantity(); 
 
-            int qty = theProduct.getOrderedQuantity();
+            int resolvedQty = qty;
 
-            if (qty > 50) {
-                theProduct.setOrderedQuantity(50);
-                result.quantityIssues.add("Quantity for " + p.getProductId() + " exceeded 50. Reduced to 50.");
-                result.isValid = false;
-            }
+                if (qty > 50) {
+                    resolvedQty = 50;
+                    p.setOrderedQuantity(50);
+                    result.quantityIssues.add("Quantity for " + p.getProductId() + " exceeded 50. Note: Reduced back to 50.");
+                    result.isValid = false ;
+                }
+                totalPayment += p.getUnitPrice() * resolvedQty;
+
+
         }
         if (totalPayment < 5.00) {
             result.paymentIssues = "Total payment (£" + String.format("%.2f", totalPayment) + ") is less than £5. Checkout aborted.";

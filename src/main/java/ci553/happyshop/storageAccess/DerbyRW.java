@@ -342,5 +342,68 @@ public class DerbyRW implements DatabaseRW {
             lock.unlock(); // Always release the lock after the operation
         }
     }
+    public Product searchByNameOrDescription(String keyword) throws SQLException {
+        String query = "SELECT productID, description, image, unitPrice, inStock " +
+                "FROM ProductTable " +
+                "WHERE LOWER(description) LIKE ? AND inStock > 0 " +
+                "ORDER BY productID FETCH FIRST 1 ROWS ONLY";
+
+        try (Connection connection = DriverManager.getConnection(DatabaseRWFactory.dbURL);
+             PreparedStatement pstmt = connection.prepareStatement(query)) {
+
+            pstmt.setString(1, "%" + keyword.toLowerCase() + "%");
+            try (ResultSet rs = pstmt.executeQuery();){
+                if (rs.next()){
+                    Product product = new Product(
+                            rs.getString("productID"),
+                            rs.getString("description"),
+                            rs.getString("image"),
+                            rs.getDouble("unitPrice"),
+                            rs.getInt("inStock")
+                    );
+                product.setOrderedQuantity(1);
+                return product;
+
+            }
+
+                }
+
+            return null;
+        }
+    }
+    @Override
+    public ArrayList<Product> searchByPriceRange(double minPrice, double maxPrice) throws SQLException {
+        ArrayList<Product> products = new ArrayList<>();
+
+        String query = "SELECT productID, description, image , unitPrice, inStock " +
+                       "FROM ProductTable " +
+                       "WHERE unitPrice >= ? AND unitPrice <= ? AND inStock > 0 " +
+                       "ORDER BY unitPrice, productID";
+
+        try (Connection connection = DriverManager.getConnection(DatabaseRWFactory.dbURL);
+             PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setDouble(1, minPrice);
+            pstmt.setDouble(2, maxPrice);
+
+            try(ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    Product product = new Product(
+                            rs.getString("productId"),
+                            rs.getString("description"),
+                            rs.getString("image"),
+                            rs.getDouble("unitPrice"),
+                            rs.getInt("inStock")
+                    );
+                    product.setOrderedQuantity(1);
+                    products.add(product);
+                }
+                return products;
+
+            }
+
+
+        }
+    }
 
 }

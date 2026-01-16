@@ -50,6 +50,12 @@ public class CustomerView  {
     // (e.g., positioning the removeProductNotifier when needed).
     private Stage viewWindow;
 
+    private ComboBox<String> cbSearchMode;  //search dropdown
+    private TextField tfMinPrice; //Price range search
+    private TextField tfMaxPrice;
+    private HBox hbKeyword;
+    private HBox hbPriceRange; // price container
+
     public void start(Stage window) {
         VBox vbSearchPage = createSearchPage();
         vbTrolleyPage = CreateTrolleyPage();
@@ -76,52 +82,92 @@ public class CustomerView  {
     }
 
     private VBox createSearchPage() {
-        Label laPageTitle = new Label("Search by Product ID/Name");
-        laPageTitle.setStyle(UIStyle.labelTitleStyle);
+      Label laTitle = new Label("Search Products");
+      laTitle.setStyle(UIStyle.labelTitleStyle);
 
-        Label laId = new Label("ID:      ");
-        laId.setStyle(UIStyle.labelStyle);
-        tfId = new TextField();
-        tfId.setPromptText("eg. 0001");
-        tfId.setStyle(UIStyle.textFiledStyle);
-        HBox hbId = new HBox(10, laId, tfId);
+      Label laSearchBy = new Label("SearchBy:");
+      laSearchBy.setStyle(UIStyle.labelStyle);
 
-        Label laName = new Label("Name:");
-        laName.setStyle(UIStyle.labelStyle);
-        tfName = new TextField();
-        tfName.setPromptText("implement it if you want");
-        tfName.setStyle(UIStyle.textFiledStyle);
-        HBox hbName = new HBox(10, laName, tfName);
+      cbSearchMode = new ComboBox<>();
+      cbSearchMode.getItems().addAll("By Product ID", "By Name/Description", "By Price Range");
+      cbSearchMode.setValue("By Product ID");
+      cbSearchMode.setStyle(UIStyle.comboBoxStyle);
+      cbSearchMode.setOnAction(e -> switchSearchmode());
 
-        Label laPlaceHolder = new Label(  " ".repeat(15)); //create left-side spacing so that this HBox aligns with others in the layout.
-        Button btnSearch = new Button("Search");
-        btnSearch.setStyle(UIStyle.buttonStyle);
-        btnSearch.setOnAction(this::buttonClicked);
-        Button btnAddToTrolley = new Button("Add to Trolley");
-        btnAddToTrolley.setStyle(UIStyle.buttonStyle);
-        btnAddToTrolley.setOnAction(this::buttonClicked);
-        HBox hbBtns = new HBox(10, laPlaceHolder,btnSearch, btnAddToTrolley);
+      HBox hbSearchMode = new HBox(10, laSearchBy, cbSearchMode);
+      hbSearchMode.setAlignment(Pos.CENTER);
 
-        ivProduct = new ImageView("imageHolder.jpg");
-        ivProduct.setFitHeight(60);
-        ivProduct.setFitWidth(60);
-        ivProduct.setPreserveRatio(true); // Image keeps its original shape and fits inside 60×60
-        ivProduct.setSmooth(true); //make it smooth and nice-looking
+      Label laSearch = new Label("Product ID / Name:");
+      laSearch.setStyle(UIStyle.labelStyle);
 
-        lbProductInfo = new Label("Thank you for shopping with us.");
-        lbProductInfo.setWrapText(true);
-        lbProductInfo.setMinHeight(Label.USE_PREF_SIZE);  // Allow auto-resize
-        lbProductInfo.setStyle(UIStyle.labelMulLineStyle);
-        HBox hbSearchResult = new HBox(5, ivProduct, lbProductInfo);
-        hbSearchResult.setAlignment(Pos.CENTER_LEFT);
+      Label laKeyword = new Label("Search:");
+      laKeyword.setAlignment(Pos.CENTER);
 
-        VBox vbSearchPage = new VBox(15, laPageTitle, hbId, hbName, hbBtns, hbSearchResult);
-        vbSearchPage.setPrefWidth(COLUMN_WIDTH);
-        vbSearchPage.setAlignment(Pos.TOP_CENTER);
-        vbSearchPage.setStyle("-fx-padding: 15px;");
+      tfId = new TextField();
+      tfId.setPromptText("Enter product ID");
+      tfId.setPrefWidth(200);
+      tfId.setStyle(UIStyle.textFiledStyle);
+      tfId.setOnAction(actionEvent -> {
+          try {
+              cusController.doAction("Search");
+          }catch (SQLException | IOException ex) {
+              ex.printStackTrace();
+          }
+      });
+
+      hbKeyword = new HBox(10, laKeyword, tfId);
+      hbKeyword.setAlignment(Pos.CENTER);
+
+      Label laMinPrice = new Label("Min Price £:");
+      laMinPrice.setStyle(UIStyle.labelStyle);
+      tfMinPrice = new TextField();
+      tfMinPrice.setPromptText("0.00");
+      tfMinPrice.setPrefWidth(80);
+      tfMinPrice.setStyle("-fx-font-size: 14px");
+
+      Label laMaxPrice = new Label("Max Price £:");
+      laMaxPrice.setStyle(UIStyle.labelStyle);
+      tfMaxPrice = new TextField();
+      tfMaxPrice.setPromptText("999.99");
+      tfMaxPrice.setPrefWidth(80);
+      tfMaxPrice.setStyle("-fx-font-size: 14px");
+
+      hbPriceRange = new HBox(10, laMinPrice, tfMinPrice, laMaxPrice, tfMaxPrice);
+      hbPriceRange.setAlignment(Pos.CENTER);
+      hbPriceRange.setVisible(false);
+      hbPriceRange.setManaged(false);
+
+      Button btnSearch = new Button("Search");
+      btnSearch.setOnAction(this::buttonClicked);
+      btnSearch.setStyle(UIStyle.buttonStyle);
+
+      VBox vbSearchInputs = new VBox(10, hbSearchMode, hbKeyword, hbPriceRange, btnSearch);
+      vbSearchInputs.setAlignment(Pos.CENTER);
+
+      ivProduct = new ImageView(new Image("imageholder.jpg"));
+      ivProduct.setFitHeight(150);
+      ivProduct.setFitWidth(200);
+      ivProduct.setPreserveRatio(true);
+
+      lbProductInfo = new Label("No Product was searched");
+      lbProductInfo.setStyle(UIStyle.labelStyle);
+      lbProductInfo.setWrapText(true);
+      lbProductInfo.setMaxWidth(COLUMN_WIDTH - 20);
+      lbProductInfo.setMinHeight(80);
+
+      Button btnAddToTrolley = new Button("Add to Trolley");
+      btnAddToTrolley.setOnAction(this::buttonClicked);
+      btnAddToTrolley.setStyle(UIStyle.buttonStyle);
+
+      VBox vbSearchPage = new VBox(15, laTitle, vbSearchInputs, ivProduct, lbProductInfo, btnAddToTrolley);
+      vbSearchPage.setPrefWidth(COLUMN_WIDTH);
+      vbSearchPage.setAlignment(Pos.CENTER);
+      vbSearchPage.setStyle("-fx-padding: 15px;");
 
         return vbSearchPage;
     }
+
+
 
     private VBox CreateTrolleyPage() {
         Label laPageTitle = new Label("🛒🛒  Trolley 🛒🛒");
@@ -169,6 +215,42 @@ public class CustomerView  {
         vbReceiptPage.setStyle(UIStyle.rootStyleYellow);
         return vbReceiptPage;
     }
+
+    private void switchSearchmode(){
+        String mode = cbSearchMode.getValue();
+
+        if (mode.equals("By Price Range")){
+            hbKeyword.setVisible(false);
+            hbKeyword.setManaged(false);
+            hbPriceRange.setVisible(true);
+            hbPriceRange.setManaged(true);
+        }else {
+            hbKeyword.setVisible(true);
+            hbKeyword.setManaged(true);
+            hbPriceRange.setVisible(false);
+            hbPriceRange.setManaged(false);
+
+            if (mode.equals("By Product ID")){
+                tfId.setPromptText("Enter product ID (e.g. 0001)");
+            }else {
+                tfId.setPromptText("Enter product name");
+            }
+
+        }
+    }
+    public String getSearchMode(){
+        return  cbSearchMode.getValue();
+    }
+
+    public String getMinPrice(){
+        return tfMinPrice.getText().trim();
+    }
+
+    public String getMaxPrice(){
+        return tfMaxPrice.getText().trim();
+    }
+
+
 
 
     private void buttonClicked(ActionEvent event) {
