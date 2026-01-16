@@ -1,0 +1,10 @@
+Order ID: 16 
+State: Ordered 
+OrderedDateTime: 2026-01-16 08:06:40 
+ProgressingDateTime:  
+CollectedDateTime: 
+Items:
+ 1234    Sweets             ( 2) £   8.00
+--------------------------------------------
+ Total                               £   8.00
+

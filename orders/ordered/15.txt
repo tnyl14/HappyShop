@@ -1,0 +1,11 @@
+Order ID: 15 
+State: Ordered 
+OrderedDateTime: 2026-01-03 12:03:43 
+ProgressingDateTime:  
+CollectedDateTime: 
+Items:
+ 1234    Sweets             ( 2) £   8.00
+ 0003    Toaster            ( 4) £  79.96
+--------------------------------------------
+ Total                               £  87.96
+

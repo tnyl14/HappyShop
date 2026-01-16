@@ -1,0 +1,10 @@
+Order ID: 14 
+State: Collected
+OrderedDateTime: 2025-12-22 11:39:14 
+ProgressingDateTime: 2025-12-28 15:52:00
+CollectedDateTime: 2025-12-28 15:52:00
+Items:
+ 1234    Sweets             ( 6) £  24.00
+--------------------------------------------
+ Total                               £  24.00
+

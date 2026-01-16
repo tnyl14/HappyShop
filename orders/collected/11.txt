@@ -1,0 +1,11 @@
+Order ID: 11 
+State: Collected
+OrderedDateTime: 2025-12-22 11:20:23 
+ProgressingDateTime: 2025-12-28 15:51:56
+CollectedDateTime: 2025-12-28 15:51:57
+Items:
+ 0001    40 inch TV         ( 2) £ 538.00
+ 1234    Sweets             ( 9) £  36.00
+--------------------------------------------
+ Total                               £ 574.00
+
